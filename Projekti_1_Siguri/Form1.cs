@@ -19,13 +19,19 @@ namespace Projekti_1_Siguri
         public Form1()
         {
             InitializeComponent();
+            txtCelesi.PasswordChar = '*';
+            txtPass.PasswordChar = '*';
         }
+
+        
 
         private void btnFsheh_Click(object sender, EventArgs e)
         {
+
             OpenFileDialog open = new OpenFileDialog();
             if (open.ShowDialog() == DialogResult.OK)
             {
+
                 byte[] bytePlaintexti = Encoding.UTF8.GetBytes(txtPlaintext.Text);
                 byte[] byteCelesi = Encoding.UTF8.GetBytes(txtCelesi.Text);
 
@@ -45,7 +51,6 @@ namespace Projekti_1_Siguri
                 txtCiphertext.Text = Convert.ToBase64String(byteCiphertext);
                 int madhesia = txtCiphertext.Text.Length;
 
-
                 pictureBox1.ImageLocation = open.FileName;
 
                 Bitmap bmp = new Bitmap(pictureBox1.ImageLocation);
@@ -57,10 +62,10 @@ namespace Projekti_1_Siguri
                 byte[] byteTeksti = Encoding.UTF8.GetBytes(msg1);
 
                 int pozita = byteImage.Length - 8;
-                for (int i = 0; i < byteTeksti.Length; i++)
+                for (int i = 0; i < madhesia; i++)
                 {
                     byteImage[pozita] = byteTeksti[i];
-                    pozita = pozita - 3;
+                    pozita = pozita - 8;
                 }
 
                 MemoryStream ms2 = new MemoryStream(byteImage);
@@ -75,13 +80,68 @@ namespace Projekti_1_Siguri
 
 
             }
+
+
         }
 
         private void btnLexo_Click(object sender, EventArgs e)
         {
-            
-        }
+            try
+            {
+                byte[] byteCiphertexti;
+                OpenFileDialog open = new OpenFileDialog();
+                if (open.ShowDialog() == DialogResult.OK)
+                {
+                    Bitmap bmp = new Bitmap(open.FileName);
+                    MemoryStream ms = new MemoryStream();
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
 
-        
+                    byte[] byteImage = ms.ToArray();
+                    StringBuilder sbMesazhi = new StringBuilder();
+                    pictureBox1.ImageLocation = open.FileName;
+                    int pozita = byteImage.Length - 8;
+                    for (int i = 0; i < 1000; i++)
+                    {
+
+                        char tempCh = (char)byteImage[pozita];
+                        if (tempCh != 'ÿ')
+                        {
+                            sbMesazhi.Append(tempCh);
+                            pozita = pozita - 8;
+                        }
+                    }
+
+
+
+                    byte[] byteCelesi = Encoding.UTF8.GetBytes(txtPass.Text);
+                    DESCryptoServiceProvider objDes = new DESCryptoServiceProvider();
+                    objDes.Key = byteCelesi;
+                    objDes.Padding = PaddingMode.Zeros;
+                    objDes.IV = Encoding.UTF8.GetBytes("11223344");
+
+                    objDes.Mode = CipherMode.CBC;
+
+                    byteCiphertexti = Convert.FromBase64String(sbMesazhi.ToString());
+
+                    MemoryStream msi = new MemoryStream(byteCiphertexti);
+                    CryptoStream cs = new CryptoStream(msi, objDes.CreateDecryptor(), CryptoStreamMode.Read);
+
+                    byte[] byteTextiDekriptuar = new byte[msi.Length];
+
+                    cs.Read(byteTextiDekriptuar, 0, byteTextiDekriptuar.Length);
+                    cs.Close();
+
+                    txtMesazhi.Text = Encoding.UTF8.GetString(byteTextiDekriptuar);
+
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Ju lutem shtypni te dhenat ne forme valide!");
+            }
+
+
+        }
     }
 }
+
