@@ -26,8 +26,26 @@ namespace Projekti_1_Siguri
             OpenFileDialog open = new OpenFileDialog();
             if (open.ShowDialog() == DialogResult.OK)
             {
+                byte[] bytePlaintexti = Encoding.UTF8.GetBytes(txtPlaintext.Text);
+                byte[] byteCelesi = Encoding.UTF8.GetBytes(txtCelesi.Text);
 
-                
+                DESCryptoServiceProvider objDes = new DESCryptoServiceProvider();
+                objDes.Key = byteCelesi;
+                objDes.Padding = PaddingMode.Zeros;
+                objDes.IV = Encoding.UTF8.GetBytes("11223344");
+                objDes.Mode = CipherMode.CBC;
+
+                MemoryStream ms = new MemoryStream();
+                CryptoStream cs = new CryptoStream(ms, objDes.CreateEncryptor(), CryptoStreamMode.Write);
+                cs.Write(bytePlaintexti, 0, bytePlaintexti.Length);
+                cs.Close();
+
+                byteCiphertext = ms.ToArray();
+
+                txtCiphertext.Text = Convert.ToBase64String(byteCiphertext);
+                int madhesia = txtCiphertext.Text.Length;
+
+
                 pictureBox1.ImageLocation = open.FileName;
 
                 Bitmap bmp = new Bitmap(pictureBox1.ImageLocation);
